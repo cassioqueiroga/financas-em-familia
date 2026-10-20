@@ -1,0 +1,24 @@
+# Dependências e builds
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Variáveis de ambiente: nunca versionar valores reais
+.env
+.env.*
+!.env.example
+
+# Banco local efêmero de testes
+.pgtest/
+
+# Supabase CLI (artefatos locais)
+supabase/.temp/
+supabase/.branches/
+
+# Logs e sistema
+*.log
+npm-debug.log*
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
