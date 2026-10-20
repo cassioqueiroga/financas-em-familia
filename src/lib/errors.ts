@@ -19,6 +19,7 @@ const BY_CODE: Record<string, string> = {
   '22023': 'Algum dado informado é inválido.',
   // PostgREST
   PGRST301: 'Sua sessão expirou. Entre novamente.',
+  PGRST303: 'Sua sessão expirou. Entre novamente.',
   // Supabase Auth
   invalid_credentials: 'E-mail ou senha incorretos.',
   email_not_confirmed: 'Confirme seu e-mail antes de entrar.',

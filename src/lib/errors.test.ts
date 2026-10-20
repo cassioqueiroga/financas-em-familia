@@ -9,6 +9,12 @@ describe('toUserMessage', () => {
     expect(msg).not.toContain('households');
   });
 
+  it('trata token inválido ou expirado como sessão expirada', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(toUserMessage({ code: 'PGRST301' })).toBe('Sua sessão expirou. Entre novamente.');
+    expect(toUserMessage({ code: 'PGRST303' })).toBe('Sua sessão expirou. Entre novamente.');
+  });
+
   it('usa mensagem genérica para erros desconhecidos', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(toUserMessage(new Error('stack interna'))).toBe(GENERIC_ERROR);
