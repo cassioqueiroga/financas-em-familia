@@ -1,0 +1,40 @@
+@import 'tailwindcss';
+
+/*
+ * Identidade visual do Finanças em Família.
+ * Contraste (WCAG 2.1 AA): texto branco sobre brand-900 ≈ 11:1. O verde de
+ * destaque, o alerta e o erro têm contraste < 4,5:1 sobre fundo claro, por
+ * isso são usados em bordas, ícones, realces e textos grandes, nunca como cor
+ * de texto pequeno sobre o fundo claro (ver docs/interface.md).
+ */
+@theme {
+  --color-brand-900: #153d32;
+  --color-brand-500: #24a36a;
+  --color-surface: #f5f7f5;
+  --color-ink: #24332d;
+  --color-warning: #d97706;
+  --color-danger: #dc4545;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+  body {
+    @apply bg-surface text-ink antialiased;
+    font-family: var(--font-sans);
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
