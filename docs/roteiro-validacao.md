@@ -30,6 +30,22 @@ Código de saída 0 só se tudo passar. O script cobre:
 
 Após a Parte A, execute de novo `seed-familia.sql` para restaurar o viewer.
 
+Requisitos do script: Node 22 (usa `--experimental-strip-types`; o aviso
+`ExperimentalWarning` é esperado) e dependências instaladas com `npm ci`.
+
+## Parte A2 — avisos de segurança do Supabase
+
+1. No painel, abrir **Advisors** > **Security Advisor** e **Performance
+   Advisor** e executar a análise.
+2. Registrar cada alerta (nome, objeto, nível). Alertas de nível crítico ou
+   "error" em `public`/`app_private` bloqueiam a aprovação.
+3. Conferir no SQL Editor que todas as tabelas de `public` têm RLS:
+   `select relname, relrowsecurity from pg_class where relnamespace = 'public'::regnamespace and relkind = 'r';`
+4. Conferir que `anon` não executa as RPCs:
+   `select has_function_privilege('anon', 'public.create_household(text, public.household_kind, uuid, text)', 'execute');` deve retornar `false`.
+5. Conferir as configurações de Auth aplicadas (cadastro desligado, senha
+   mínima) e anotar as que não existem no plano Free.
+
 ## Parte B — manual na interface
 
 Com `.env.local` apontando para o projeto e `npm run dev`:
@@ -70,6 +86,6 @@ npm audit
 - Parte B: os 7 passos com o resultado descrito.
 - Parte C: todos os comandos sem falha; `npm audit` sem vulnerabilidades
   altas/críticas.
-- Advisors de segurança do Supabase sem alertas críticos.
+- Parte A2: advisors sem alertas críticos e consultas com o resultado esperado.
 - Evidências (saídas e capturas) anexadas ao relatório da validação, sem
   senhas, tokens ou chaves.
