@@ -176,8 +176,14 @@ projeto Supabase de desenvolvimento `financas-em-familia-dev` no plano Free,
 região São Paulo**, depois de você conferir no painel os itens da seção D.
 Junto com a autorização, indique o método:
 
-1. Você cria pelo painel e eu aplico as migrações e executo a validação.
-2. Eu crio e executo tudo pelo conector Supabase desta sessão.
+1. Você cria o projeto e os usuários de teste pelo painel. Eu aplico as
+   migrações e consulto os advisors pelo conector Supabase. Você executa
+   `npm run e2e:supabase` e o roteiro manual na sua máquina, e nenhuma senha
+   passa pelo chat.
+2. Eu crio o projeto e aplico as migrações pelo conector Supabase. Você
+   continua criando os usuários fictícios no painel e executando o script.
+
+Em ambos os casos a senha dos usuários de teste fica só com você.
 
 Até lá nada será criado. Contas e Saldos continua bloqueado até a fundação
 ser validada de ponta a ponta com evidências reais.
