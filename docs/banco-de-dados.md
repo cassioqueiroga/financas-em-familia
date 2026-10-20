@@ -1,8 +1,9 @@
 # Banco de dados e persistência
 
-## Estado real (2026-10-20)
+## Estado real (2026-10-20, Fase 1.1)
 
-- As migrações **foram aplicadas e testadas somente em um PostgreSQL 16.15
+- Três migrações (0001 fundação, 0002 espaços, 0003 revogação). Todas
+  **aplicadas e testadas somente em um PostgreSQL 16.15
   local e efêmero**, criado e destruído por `npm run test:db`.
 - **Nenhum projeto Supabase está conectado.** Não há banco de desenvolvimento,
   homologação ou produção. Portanto a persistência da aplicação **não está
@@ -36,6 +37,8 @@
 | `public.profiles` | 1:1 com `auth.users`, criado por gatilho; nome de exibição e fuso |
 | `public.households` | espaço que isolará os dados financeiros; `kind` = `personal` ou `family` |
 | `public.household_members` | vínculo usuário–espaço com papel `owner`/`admin`/`member`/`viewer` |
+| RPC `public.create_household` | cria espaço + vínculo owner, transacional e idempotente |
+| RPC `public.remove_household_member` | revoga vínculo ou saída voluntária, com regras por papel (D15) |
 | `app_private.audit_events` | auditoria somente inclusão (gatilhos bloqueiam update/delete/truncate) |
 | `app_private.idempotency_keys` | chaves de idempotência por usuário e operação |
 
@@ -52,6 +55,10 @@
   parâmetros diferentes gera erro `23505`. Requisições concorrentes com a
   mesma chave produzem um único registro (testado com 5 chamadas paralelas).
 - **Espaço pessoal**: um único membro, garantido por gatilho com `for update`.
+- **Owner único**: índice único parcial em `household_members`.
+- **Revogação**: o acesso é verificado em cada consulta pela tabela de
+  membros, então remover o vínculo vale na próxima requisição, sem esperar o
+  token expirar.
 
 ## Migrações
 
@@ -61,13 +68,15 @@ aplicadas em ordem lexicográfica, cada uma em transação.
 Regras:
 
 1. Migração já aplicada em qualquer ambiente compartilhado **nunca é editada**;
-   corrija com nova migração (*forward-only*). As duas migrações atuais ainda
-   não foram aplicadas em nenhum ambiente compartilhado.
+   corrija com nova migração (*forward-only*). As migrações atuais ainda
+   não foram aplicadas em nenhum ambiente compartilhado (a 0003 foi criada
+   como arquivo novo para manter a rastreabilidade da Fase 1.1).
 2. Mudanças destrutivas (drop, alteração de tipo com perda) exigem
    autorização explícita, backup verificado e plano de reversão.
 3. Toda migração nova deve passar em `npm run test:db`.
 
-Aplicar em um projeto Supabase (quando autorizado):
+Aplicar em um projeto Supabase (quando autorizado; passo a passo em
+`docs/supabase-plano.md`):
 
 ```bash
 npx supabase link --project-ref <ref>    # requer SUPABASE_ACCESS_TOKEN

@@ -36,7 +36,8 @@ src/
 supabase/
   migrations/     migrações SQL versionadas (formato Supabase CLI)
   tests/          testes de integração do banco + shim local do Supabase
-scripts/          test-db.sh (PostgreSQL efêmero para testes)
+  e2e/            seed e limpeza para o projeto Supabase de desenvolvimento
+scripts/          test-db.sh (PostgreSQL efêmero) e e2e/validar-supabase.ts
 docs/             documentação técnica
 ```
 
@@ -75,3 +76,14 @@ Ambiente verificado: Node 22.22.0, npm 10.9.4 (lockfile gerado com npm
   rotas protegidas por `RequireAuth`.
 - **Espaços**: lista via `select` (filtrado por RLS) e criação via RPC
   `create_household` com chave de idempotência gerada por intenção do usuário.
+- **Membros**: revogação/saída via RPC `remove_household_member` (sem tela
+  ainda; usada pelo roteiro E2E). Convites ficam para a fase de
+  compartilhamento.
+
+## Modelo de acesso (D04, D05, D14)
+
+- Dado privado → espaço `personal` do usuário (só ele é membro).
+- Dado familiar → espaço `family`; acesso exige vínculo ativo.
+- Papel define o teto do que o membro pode fazer; dados financeiros futuros
+  exigirão também concessão explícita por recurso.
+- Ser owner/admin de uma família não dá acesso a espaços pessoais.

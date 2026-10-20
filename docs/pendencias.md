@@ -3,14 +3,14 @@
 ## Bloqueios (precisam de ação do responsável)
 
 1. **Projeto Supabase de desenvolvimento**: não existe. Sem ele não há login
-   real nem persistência ponta a ponta. Necessário: autorização para criar
-   (plano gratuito disponível; limites e pausa por inatividade se aplicam) ou
-   credenciais de um projeto existente (URL + chave publicável; para aplicar
-   migrações, token de acesso da CLI fora do repositório).
+   real nem persistência ponta a ponta. Plano pronto em
+   `docs/supabase-plano.md`; roteiro em `docs/roteiro-validacao.md`.
+   Necessário: autorização para criar o projeto no plano Free (ou conectar
+   um existente).
 2. **Repositório remoto**: o Git é apenas local. Publicar no GitHub exige
    autorização e definição do repositório.
-3. **Validação de produto** das decisões D04 (espaços pessoal/família) e
-   D05 (papéis).
+
+D04 e D05 foram aprovadas em 2026-10-20 e estão refletidas no código.
 
 ## Pendências técnicas
 
@@ -21,6 +21,16 @@
 - Configuração de Auth no Supabase: confirmação de e-mail, política de senha,
   limite de tentativas, MFA, URLs de redirecionamento.
 - Fluxos de cadastro e recuperação de senha na interface.
+- Convites, inclusão de membros, alteração de papel e transferência de
+  propriedade (fase de compartilhamento). Hoje a preparação de papéis para
+  teste é feita por SQL no painel.
+- Concessão explícita de compartilhamento por recurso (D14) — junto com o
+  primeiro módulo que tiver dados familiares.
+- Política de exclusão de conta quando o usuário é criador de espaços
+  (`created_by` com `on delete restrict`).
+- Confirmar no fornecedor os itens marcados como pendentes em
+  `docs/supabase-plano.md` (região no Free, janela de restauração, domínio
+  de e-mail de teste, custos em reais).
 - Ensaio do procedimento de restauração de backup.
 - Divisão do bundle (566 kB, 164 kB gzip) quando houver mais rotas.
 - `supabase/config.toml` para stack local completa (requer Supabase CLI + Docker).

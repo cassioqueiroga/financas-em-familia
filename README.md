@@ -2,7 +2,8 @@
 
 Aplicação web responsiva para organização financeira individual e familiar.
 
-**Estado atual: Fase 1 — Fundação Técnica.** Não há módulos financeiros
+**Estado atual: Fase 1.1 — fundação consolidada (D04/D05 aprovadas),
+aguardando autorização para o Supabase de desenvolvimento.** Não há módulos financeiros
 (contas, lançamentos, cartões, orçamentos etc.) implementados. O sistema
 **não está pronto para produção** e nunca foi publicado.
 
@@ -12,7 +13,8 @@ Aplicação web responsiva para organização financeira individual e familiar.
   estados de carregamento/erro/vazio/sucesso e tela de entrada.
 - Integração preparada com Supabase Auth e PostgREST (somente chave publicável).
 - Migrações PostgreSQL com perfis, espaços (pessoal/família), membros,
-  políticas RLS, RPC idempotente, auditoria somente inclusão.
+  políticas RLS, RPCs de criação idempotente e de revogação de vínculo,
+  auditoria somente inclusão.
 - Primitivas de precisão financeira (centavos inteiros, rateio exato, datas
   com fuso explícito).
 - Testes unitários, de componentes e de integração do banco (PostgreSQL real
@@ -58,4 +60,7 @@ Detalhes em [docs/testes.md](docs/testes.md).
 | [docs/interface.md](docs/interface.md) | Identidade visual e acessibilidade |
 | [docs/decisoes.md](docs/decisoes.md) | Registro de decisões técnicas |
 | [docs/pendencias.md](docs/pendencias.md) | Limitações, bloqueios e pendências |
+| [docs/supabase-plano.md](docs/supabase-plano.md) | Plano do projeto Supabase de desenvolvimento (não criado) |
+| [docs/roteiro-validacao.md](docs/roteiro-validacao.md) | Roteiro de validação real (API, interface, regressão) |
 | [docs/relatorio-fase-1.md](docs/relatorio-fase-1.md) | Relatório final da Fase 1 |
+| [docs/relatorio-fase-1-1.md](docs/relatorio-fase-1-1.md) | Relatório da Fase 1.1 |
