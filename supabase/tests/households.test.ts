@@ -261,6 +261,26 @@ describe('convenções de esquema', () => {
     expect(rows).toEqual([]);
   });
 
+  it('anon não executa nenhuma função de public nem acessa nenhuma tabela', async () => {
+    const funcs = await pool.query(`
+      select p.oid::regprocedure::text as fn from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname = 'public' and has_function_privilege('anon', p.oid, 'execute')`);
+    expect(funcs.rows).toEqual([]);
+    const tables = await pool.query(`
+      select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace
+      where n.nspname = 'public' and c.relkind in ('r', 'v', 'm')
+        and has_table_privilege('anon', c.oid, 'select, insert, update, delete')`);
+    expect(tables.rows).toEqual([]);
+  });
+
+  it('authenticated não tem INSERT/DELETE direto em nenhuma tabela de public', async () => {
+    const { rows } = await pool.query(`
+      select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace
+      where n.nspname = 'public' and c.relkind = 'r'
+        and has_table_privilege('authenticated', c.oid, 'insert, delete, truncate')`);
+    expect(rows).toEqual([]);
+  });
+
   it('money_cents é bigint (inteiro em centavos)', async () => {
     const { rows } = await pool.query(`
       select format_type(t.typbasetype, null) as base from pg_type t
