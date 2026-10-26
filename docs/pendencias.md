@@ -1,42 +1,45 @@
 # Limitações, bloqueios e pendências
 
-## Bloqueios (precisam de ação do responsável)
+Atualizado em 2026-10-26 (finalização do núcleo financeiro do casal).
 
-1. **Projeto Supabase de desenvolvimento**: não existe. Sem ele não há login
-   real nem persistência ponta a ponta. Plano pronto em
-   `docs/supabase-plano.md`; roteiro em `docs/roteiro-validacao.md`.
-   Necessário: autorização para criar o projeto no plano Free (ou conectar
-   um existente).
-2. **Repositório remoto**: o Git é apenas local. Publicar no GitHub exige
-   autorização e definição do repositório.
+## Bloqueios (precisam de decisão ou ação do proprietário)
 
-D04 e D05 foram aprovadas em 2026-10-20 e estão refletidas no código.
+1. **Projeto Supabase**: não existe. Sem ele não há uso real; hoje o app roda
+   com o backend local de desenvolvimento (D17). Passos em `docs/uso-real.md`
+   e `docs/supabase-plano.md`.
+2. **Hospedagem**: não definida. Necessária para usar no celular com HTTPS.
+3. **Repositório remoto (GitHub privado)**: o Git é apenas local.
+4. **Autorização de commits**: o trabalho de 2026-10-26 está fora de commit.
+5. **Fonte bancária automática (MeuPluggy/Open Finance)**: bloqueada até
+   confirmar viabilidade, limites e custos, autorização explícita e
+   credenciais apenas no servidor. Substituto atual: importação OFX/CSV.
+6. **Bancos e cartões usados pelo casal**: para conferir o formato real dos
+   extratos de cada banco (os testes usam arquivos fictícios).
 
 ## Pendências técnicas
 
-- Aplicar migrações em um projeto Supabase e rodar os advisors de segurança.
-- Testes ponta a ponta (login real, RLS via PostgREST) quando houver projeto.
+- Aplicar as migrações em um projeto Supabase e rodar os advisors de segurança.
+- Rodar `npm run e2e:supabase` e `npm run e2e:navegador` contra o projeto real
+  de desenvolvimento (hoje validados só no backend local).
 - CI (typecheck, lint, testes, build, `test:db`) — depende do repositório remoto.
 - Cabeçalhos de segurança (CSP, HSTS) — dependem da hospedagem.
-- Configuração de Auth no Supabase: confirmação de e-mail, política de senha,
-  limite de tentativas, MFA, URLs de redirecionamento.
-- Fluxos de cadastro e recuperação de senha na interface.
-- Convites, inclusão de membros, alteração de papel e transferência de
-  propriedade (fase de compartilhamento). Hoje a preparação de papéis para
-  teste é feita por SQL no painel.
-- Concessão explícita de compartilhamento por recurso (D14) — junto com o
-  primeiro módulo que tiver dados familiares.
+- Configuração de Auth no Supabase: política de senha, limite de tentativas,
+  MFA, URLs de redirecionamento.
+- Recuperação de senha e troca de senha na interface (hoje: pelo painel do Supabase).
+- Alteração de papel e transferência de propriedade do espaço.
 - Política de exclusão de conta quando o usuário é criador de espaços
   (`created_by` com `on delete restrict`).
-- Confirmar no fornecedor os itens marcados como pendentes em
-  `docs/supabase-plano.md` (região no Free, janela de restauração, domínio
-  de e-mail de teste, custos em reais).
+- Edição de compra de cartão (hoje: estornar e lançar de novo) e de
+  transferência (hoje: cancelar e lançar de novo).
+- Atribuir pessoa e categoria às linhas importadas antes de confirmar (hoje
+  entram sem categoria e sem pessoa; dá para corrigir depois).
 - Ensaio do procedimento de restauração de backup.
-- Divisão do bundle (566 kB, 164 kB gzip) quando houver mais rotas.
+- Divisão do bundle (≈ 640 kB sem compressão) por rota.
 - `supabase/config.toml` para stack local completa (requer Supabase CLI + Docker).
 
-## Fora do escopo desta fase (não iniciado)
+## Não iniciado (fora do núcleo; nenhum depende de serviço pago, mas ficou para depois)
 
-Contas e saldos, lançamentos, transferências, cartões/faturas/parcelamentos,
-orçamentos, metas, relatórios, importação, convites/compartilhamento, IA,
-planos, pagamentos, administração.
+Metas, orçamentos por categoria, reserva de emergência, controle de
+assinaturas/recorrências automáticas, relatórios por período longo,
+exportação, IA (exige decisão: nenhuma API paga foi conectada e nenhum dado
+financeiro é enviado a terceiros).

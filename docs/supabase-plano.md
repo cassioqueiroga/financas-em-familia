@@ -119,7 +119,7 @@ npm run check && npm run test:db                 # tudo verde antes de aplicar
 npx supabase@2.119.0 init                         # cria supabase/config.toml (local, sem segredos); revisar e versionar
 npx supabase@2.119.0 login                        # token pessoal, interativo; não salvar em arquivo
 npx supabase@2.119.0 link --project-ref <ref>     # pede a senha do banco: digitar, não salvar
-npx supabase@2.119.0 db push --dry-run            # deve listar exatamente 0001, 0002 e 0003
+npx supabase@2.119.0 db push --dry-run            # deve listar exatamente as 7 migrações de supabase/migrations
 npx supabase@2.119.0 db push
 npx supabase@2.119.0 migration list               # local e remoto iguais
 ```
@@ -130,9 +130,9 @@ configurações locais de Auth ao projeto) e qualquer comando com chave
 secreta. [doc: comportamento descrito em *Local development workflow*]
 
 Se `init` perguntar sobre configurações de editor, responder não. Se o
-`--dry-run` listar algo além das três migrações, **parar** e reportar.
+`--dry-run` listar algo além das sete migrações, **parar** e reportar.
 
-Alternativa sem CLI: colar os três arquivos, em ordem, no SQL Editor.
+Alternativa sem CLI: colar os sete arquivos, em ordem, no SQL Editor.
 **Não** aplicar `supabase/tests/local-supabase-shim.sql` (só para testes locais).
 Depois: abrir Advisors > Security e Performance e registrar os alertas.
 

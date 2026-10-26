@@ -2,6 +2,7 @@
 
 | Ambiente | `VITE_APP_ENV` | Arquivo local | Observações |
 | --- | --- | --- | --- |
+| Desenvolvimento local sem nuvem | `development` | `.env.localdev.local` (gerado por `npm run dev:backend`; `npm run dev:local`) | Backend local em 127.0.0.1 que imita o subconjunto do Supabase usado pelo app. Só dados fictícios. |
 | Desenvolvimento | `development` | `.env.local` | Projeto Supabase de desenvolvimento ou stack local. Faixa de aviso visível. |
 | Homologação | `staging` | `.env.staging.local` (`npm run build:staging`) | Projeto Supabase separado. Exige HTTPS. Faixa de aviso visível. |
 | Produção | `production` | variáveis no provedor de hospedagem | Projeto Supabase separado. Exige HTTPS. |

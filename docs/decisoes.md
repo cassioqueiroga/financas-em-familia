@@ -111,3 +111,46 @@ Toda remoção vai para a auditoria.
 `npm run e2e:supabase` executa os testes 1 a 6 via API, como um cliente
 real, sem chave privilegiada. A preparação de papéis usa SQL no painel
 (`supabase/e2e/seed-familia.sql`) porque ainda não há fluxo de convite.
+
+## D17 — Backend local de desenvolvimento (aceita, 2026-10-26)
+Sem projeto Supabase autorizado e sem acesso à stack oficial (Docker/CLI)
+neste ambiente, `scripts/dev-backend/` sobe um PostgreSQL 16 local e um
+servidor Node que imita apenas o que o app usa do GoTrue (login por senha,
+refresh, usuário, logout; cadastro desligado) e do PostgREST (consultas
+simples e RPC). Ele aplica **as mesmas migrações** e executa cada pedido com
+`set local role authenticated` e as claims do JWT, então RLS, grants e RPCs
+são os reais. Recusa `service_role`, escuta só em 127.0.0.1 e aceita CORS só
+de localhost. Não substitui a validação em um projeto Supabase de verdade.
+
+## D18 — Compartilhar marcado por padrão no espaço da família (aceita como padrão; revisável)
+Ao cadastrar conta no espaço da família, os outros membros aparecem marcados
+("pode ver e lançar"). O titular pode desmarcar antes de salvar ou revogar
+depois. Sem concessão ninguém além do titular vê a conta (D14).
+
+## D19 — Despesa de cartão conta no mês da fatura (aceita)
+No resumo mensal, compras no cartão entram como despesa no mês de
+competência da fatura (fechamento), não na data da compra. O pagamento da
+fatura é uma transferência entre contas e não conta como nova despesa.
+
+## D20 — Só o titular altera, desativa e compartilha a conta (aceita)
+Owner/admin do espaço não alteram nem enxergam contas que não lhes foram
+compartilhadas. Remover um membro apaga as concessões dele (gatilho).
+
+## D21 — Correção = cancelar + substituir (aceita)
+Nenhum lançamento é apagado. Corrigir cria um novo lançamento com
+`replaces_id` apontando para o original, que fica com situação "cancelado".
+Transferências e pagamentos de fatura cancelam as duas pontas juntas.
+
+## D22 — Transferência entre espaços (aceita)
+É permitido transferir entre uma conta do espaço pessoal e uma do espaço da
+família, desde que a pessoa possa lançar nas duas contas.
+
+## D23 — A tela inicial virou o painel financeiro (aceita)
+`src/pages/HomePage.tsx` (tela de boas-vindas da Fase 1) foi substituída por
+`src/features/finance/DashboardPage.tsx` na rota `/`.
+
+## D24 — "Gasto de" começa preenchido com quem está lançando (aceita, revisável)
+Para o resumo "despesas por pessoa" fazer sentido para o casal sem esforço,
+lançamentos e compras novos começam atribuídos ao usuário que registra; dá
+para trocar para o outro membro ou "Não atribuído". Lançamentos importados de
+extrato ficam sem atribuição.

@@ -103,3 +103,18 @@ papéis e privilégios padrão) só para os testes.
   migrar os dados de volta.
 - **Ensaio**: o procedimento de restauração deve ser testado em homologação
   antes da primeira publicação (pendente; não há projeto ainda).
+
+## Núcleo financeiro (migrações 20261026000100 a 0400)
+
+| Migração | Conteúdo |
+| --- | --- |
+| `…0100_invitations` | `household_invitations` (só o hash do código é guardado), criar/aceitar/revogar convite, `list_household_members`, `update_my_profile` |
+| `…0200_finance_core` | `accounts`, `account_grants` (D14), `categories` (19 padrão por espaço), `transactions`, `import_batches`, `card_purchases`; visão `account_balances` (saldo derivado, nunca gravado); RPCs de conta, categoria, lançamento, efetivação, cancelamento e transferência |
+| `…0300_credit_cards` | regras de fechamento/vencimento, compra parcelada, estorno, pagamento de fatura, `card_statements` |
+| `…0400_summary_import` | `monthly_summary` e `preview_import`/`import_entries` com deduplicação por `external_id` |
+
+Regras: escrita só por RPC `security definer` com `search_path = ''`;
+leitura por RLS exigindo vínculo **e** concessão da conta; valores em
+centavos `bigint`; idempotência por chave; concorrência por `version`
+(erro 40001); auditoria sem valores monetários; nada é apagado
+(cancelamento e substituição com `replaces_id`).
