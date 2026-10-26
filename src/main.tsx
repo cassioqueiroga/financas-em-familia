@@ -6,7 +6,9 @@ import type { AppServices } from '@/app/services';
 import { ServicesProvider } from '@/app/services-context';
 import { loadConfig } from '@/config/env';
 import { AuthProvider } from '@/features/auth/AuthProvider';
+import { createSupabaseFinanceRepository } from '@/features/finance/repository';
 import { createSupabaseHouseholdRepository } from '@/features/households/repository';
+import { createSupabaseSharingRepository } from '@/features/sharing/repository';
 import { ConfigErrorPage } from '@/pages/ConfigErrorPage';
 import { createSupabaseAuthService } from '@/services/auth';
 import { createSupabaseClient } from '@/services/supabase';
@@ -22,6 +24,8 @@ if (!result.ok) {
   const services: AppServices = {
     auth: createSupabaseAuthService(client),
     households: createSupabaseHouseholdRepository(client),
+    finance: createSupabaseFinanceRepository(client),
+    sharing: createSupabaseSharingRepository(client),
   };
   root.render(
     <StrictMode>

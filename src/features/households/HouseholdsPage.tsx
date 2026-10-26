@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { useServices } from '@/app/services';
 import { Button } from '@/components/ui/Button';
 import { EmptyState, ErrorState, LoadingState, SuccessState } from '@/components/ui/StatusViews';
+import { useFinance } from '@/features/finance/FinanceContext';
 import { toUserMessage } from '@/lib/errors';
 import type { Household } from './types';
 import { createHouseholdSchema } from './validation';
@@ -15,6 +16,7 @@ const KIND_LABEL: Record<Household['kind'], string> = { personal: 'Pessoal', fam
 
 export function HouseholdsPage() {
   const { households } = useServices();
+  const { reloadHouseholds } = useFinance();
   const [list, setList] = useState<ListState>({ status: 'loading' });
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -63,7 +65,7 @@ export function HouseholdsPage() {
       idempotencyKey.current = crypto.randomUUID();
       formEl.reset();
       setSuccess(`Espaço “${created.name}” criado.`);
-      await load();
+      await Promise.all([load(), reloadHouseholds()]);
     } catch (err) {
       setFormError(toUserMessage(err, 'criar espaço'));
     } finally {

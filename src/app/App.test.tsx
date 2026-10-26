@@ -14,7 +14,7 @@ describe('navegação e autenticação', () => {
   it('mostra a página inicial para usuário autenticado', async () => {
     renderApp({ auth: fakeAuth({ id: 'u-1', email: null }), households: fakeHouseholds() });
     expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument();
-    expect(screen.getByText('Nenhum dado financeiro ainda')).toBeInTheDocument();
+    expect(await screen.findByText('Nenhum dado financeiro ainda')).toBeInTheDocument();
   });
 
   it('mostra erro amigável para credenciais inválidas', async () => {

@@ -7,6 +7,17 @@ import type { AppEnvironment } from '@/config/env';
 const navClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-lg px-3 py-2 text-sm font-medium ${isActive ? 'bg-white/15 text-white' : 'text-white/80 hover:text-white'}`;
 
+const NAV = [
+  ['/', 'Início'],
+  ['/lancamentos', 'Lançamentos'],
+  ['/contas', 'Contas'],
+  ['/cartoes', 'Cartões'],
+  ['/importar', 'Importar'],
+  ['/categorias', 'Categorias'],
+  ['/familia', 'Família'],
+  ['/espacos', 'Espaços'],
+] as const;
+
 export function AppShell({ environment, children }: { environment: AppEnvironment; children: ReactNode }) {
   const { state, signOut } = useAuth();
 
@@ -26,13 +37,12 @@ export function AppShell({ environment, children }: { environment: AppEnvironmen
             Finanças <span className="text-brand-500">em Família</span>
           </Link>
           {state.status === 'authenticated' && (
-            <nav aria-label="Principal" className="flex items-center gap-1">
-              <NavLink to="/" end className={navClass}>
-                Início
-              </NavLink>
-              <NavLink to="/espacos" className={navClass}>
-                Espaços
-              </NavLink>
+            <nav aria-label="Principal" className="flex flex-wrap items-center gap-1">
+              {NAV.map(([to, label]) => (
+                <NavLink key={to} to={to} end={to === '/'} className={navClass}>
+                  {label}
+                </NavLink>
+              ))}
               <Button variant="ghost" className="text-white hover:bg-white/10" onClick={() => void signOut()}>
                 Sair
               </Button>

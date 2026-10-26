@@ -20,7 +20,8 @@
     "test:db": "bash scripts/test-db.sh",
     "check": "npm run typecheck && npm run lint && npm run test && npm run build",
     "build:staging": "tsc -b && vite build --mode staging",
-    "e2e:supabase": "node --experimental-strip-types scripts/e2e/validar-supabase.ts"
+    "e2e:supabase": "node --experimental-strip-types scripts/e2e/validar-supabase.ts",
+    "e2e:navegador": "node scripts/e2e/fluxos-navegador.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.2",

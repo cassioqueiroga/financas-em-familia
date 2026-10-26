@@ -28,3 +28,21 @@ describe('toUserMessage', () => {
     expect(toUserMessage({ code: '', message: 'TypeError: Failed to fetch' })).toBe(NETWORK_ERROR);
   });
 });
+
+describe('mensagens de regra de negócio do servidor', () => {
+  it('exibe mensagem em português escrita para o usuário', () => {
+    expect(toUserMessage({ code: '23514', message: 'Data anterior à data do saldo inicial da conta' })).toBe(
+      'Data anterior à data do saldo inicial da conta',
+    );
+  });
+
+  it('esconde mensagens técnicas do banco', () => {
+    expect(toUserMessage({ code: '23514', message: 'new row for relation "accounts" violates check constraint "x"' })).toBe(
+      'Os dados informados não são válidos.',
+    );
+    expect(toUserMessage({ code: '23505', message: 'duplicate key value violates unique constraint "accounts_household_name_uq"' })).toBe(
+      'Este registro já existe ou a operação já foi realizada com outros dados.',
+    );
+    expect(toUserMessage({ code: 'XX000', message: 'Mensagem qualquer' })).toBe(GENERIC_ERROR);
+  });
+});
