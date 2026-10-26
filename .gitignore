@@ -12,6 +12,9 @@ coverage/
 # Banco local efêmero de testes
 .pgtest/
 
+# Backend local de desenvolvimento (banco, segredo e credenciais fictícias)
+.local-dev/
+
 # Supabase CLI (artefatos locais)
 supabase/.temp/
 supabase/.branches/

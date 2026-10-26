@@ -9,6 +9,8 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:local": "vite --mode localdev",
+    "dev:backend": "bash scripts/dev-backend/start.sh",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
