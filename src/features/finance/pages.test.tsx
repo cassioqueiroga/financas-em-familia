@@ -242,3 +242,34 @@ describe('Família', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Cole o código recebido.');
   });
 });
+
+describe('Análises', () => {
+  it('mostra evolução, diagnóstico e faturas comprometidas', async () => {
+    const { finance } = setup('/analises', [checking, card], {
+      monthlySummary: async (_h, month) =>
+        makeSummary({
+          month: `${month}-01`,
+          income_cents: 1000000,
+          expense_cents: 1100000,
+          result_cents: -100000,
+          available_cents: 200000,
+          expenses_by_category: [{ category_id: 'c-1', name: 'Mercado', total_cents: 1100000 }],
+        }),
+      cardStatements: async () => [
+        { statement_month: '2099-01-01', closing_date: '2099-01-05', due_date: '2099-01-15', total_cents: 1, paid_cents: 0, remaining_cents: 1, status: 'open' },
+      ],
+    });
+    expect(await screen.findByRole('heading', { name: 'Diagnóstico e sugestões' })).toBeInTheDocument();
+    expect(screen.getByText(/meses seguidos gastando mais do que entrou/)).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Evolução mensal' })).toBeInTheDocument();
+    expect(within(screen.getByRole('region', { name: /Categorias:/ })).getByText('Mercado')).toBeInTheDocument();
+    expect(finance.calls.monthlySummary).toHaveLength(6);
+    expect(finance.calls.cardStatements).toHaveLength(1);
+  });
+
+  it('troca para 12 meses', async () => {
+    const { finance, user } = setup('/analises', [checking]);
+    await user.click(await screen.findByRole('button', { name: '12 meses' }));
+    await waitFor(() => expect(finance.calls.monthlySummary).toHaveLength(18));
+  });
+});

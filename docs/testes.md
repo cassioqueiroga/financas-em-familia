@@ -76,7 +76,7 @@ fez 1 falhar.
 - Fluxo real de autenticação e chamadas ao Supabase hospedado: não há
   projeto Supabase configurado (ver `docs/pendencias.md`). O backend local
   (D17) cobre o mesmo banco e as mesmas regras, mas não o GoTrue/PostgREST reais.
-  `npm run e2e:supabase` passou (40/40) e `npm run e2e:navegador` (22/22)
+  `npm run e2e:supabase` passou (40/40) e `npm run e2e:navegador` (22/22; 26/26 após a tela Análises, só no backend local)
   **somente contra o backend local**; nenhum dos dois rodou contra um
   projeto Supabase.
 - Testes ponta a ponta em navegador no CI: não há CI configurado.

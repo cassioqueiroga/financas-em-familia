@@ -37,9 +37,15 @@ Atualizado em 2026-10-26 (finalização do núcleo financeiro do casal).
 - Divisão do bundle (≈ 640 kB sem compressão) por rota.
 - `supabase/config.toml` para stack local completa (requer Supabase CLI + Docker).
 
+## Análises (D25)
+
+Tela Análises: evolução de 6/12 meses, poupança, categorias × média,
+faturas comprometidas, reserva de emergência e diagnóstico por regras.
+Limite conhecido: 12 meses = 12 chamadas de `monthly_summary` em paralelo;
+se ficar lento, uma função única no banco resolve (exigiria migração).
+
 ## Não iniciado (fora do núcleo; nenhum depende de serviço pago, mas ficou para depois)
 
-Metas, orçamentos por categoria, reserva de emergência, controle de
-assinaturas/recorrências automáticas, relatórios por período longo,
-exportação, IA (exige decisão: nenhuma API paga foi conectada e nenhum dado
+Metas, orçamentos por categoria (D26), controle de
+assinaturas/recorrências automáticas, exportação, IA (D27/D28) (exige decisão: nenhuma API paga foi conectada e nenhum dado
 financeiro é enviado a terceiros).

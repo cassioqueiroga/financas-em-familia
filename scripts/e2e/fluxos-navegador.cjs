@@ -204,6 +204,17 @@ const text = async (page) => (await page.locator('main').innerText()).replace(/\
     await chefe.getByText('Despesas por pessoa').waitFor();
     await chefe.waitForTimeout(800);
     ok('painel do chefe reflete despesa da esposa por pessoa', (await text(chefe)).includes('Esposa'));
+    await nav(chefe, '/analises');
+    await chefe.getByRole('heading', { name: 'Diagnóstico e sugestões' }).waitFor();
+    const an = await text(chefe);
+    ok('análises: diagnóstico e evolução mensal', an.includes('Evolução mensal') && an.includes('(em andamento)'));
+    ok('análises: parcelas futuras do cartão aparecem', an.includes('Faturas já comprometidas') && an.includes('300,00'));
+    await chefe.getByRole('button', { name: '12 meses' }).click();
+    await chefe.waitForTimeout(800);
+    ok('análises: período de 12 meses', (await chefe.locator('#titulo-evolucao ~ div table tbody tr').count()) === 12);
+    await nav(esposa, '/analises');
+    await esposa.getByRole('heading', { name: 'Diagnóstico e sugestões' }).waitFor();
+    ok('análises da esposa carregam só com o que ela vê', (await text(esposa)).includes('Evolução mensal'));
     await chefe.getByRole('button', { name: 'Sair' }).click().catch(() => {});
     await chefe.waitForTimeout(800);
     ok('sair volta para o login', chefe.url().includes('/entrar'), chefe.url());

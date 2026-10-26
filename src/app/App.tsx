@@ -11,6 +11,7 @@ import { EntriesPage } from '@/features/finance/EntriesPage';
 import { FinanceProvider } from '@/features/finance/FinanceContext';
 import { HouseholdsPage } from '@/features/households/HouseholdsPage';
 import { ImportPage } from '@/features/import/ImportPage';
+import { InsightsPage } from '@/features/insights/InsightsPage';
 import { FamilyPage } from '@/features/sharing/FamilyPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
@@ -24,6 +25,7 @@ export function App({ environment }: { environment: AppEnvironment }) {
         <Routes>
           <Route path="/entrar" element={<LoginPage />} />
           <Route path="/" element={protect(<DashboardPage />)} />
+          <Route path="/analises" element={protect(<InsightsPage />)} />
           <Route path="/lancamentos" element={protect(<EntriesPage />)} />
           <Route path="/contas" element={protect(<AccountsPage />)} />
           <Route path="/cartoes" element={protect(<CardsPage />)} />

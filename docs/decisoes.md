@@ -154,3 +154,20 @@ Para o resumo "despesas por pessoa" fazer sentido para o casal sem esforço,
 lançamentos e compras novos começam atribuídos ao usuário que registra; dá
 para trocar para o outro membro ou "Não atribuído". Lançamentos importados de
 extrato ficam sem atribuição.
+
+## D25 — Análises sem IA e sem migração (implementada em branch; publicação aguarda o proprietário)
+A tela **Análises** (`/analises`, `src/features/insights/`) é derivada só de
+`monthly_summary` (um por mês) e `card_statements` (por cartão), sob as mesmas
+permissões (security invoker): cada pessoa analisa apenas o que pode ver.
+Médias usam só meses fechados, anteriores ao mês escolhido e com movimento.
+O diagnóstico é feito por regras fixas, com limites em `THRESHOLDS`
+(`analysis.ts`); nenhum dado sai do app. Merge no `main` (que republica o
+site) depende de autorização do proprietário.
+
+## D26 a D28 — Pendentes de decisão do proprietário
+- D26: orçamentos por categoria e metas (exige migração no Supabase real).
+- D27: IA com Claude via Edge Function do Supabase (conta Anthropic, modelo,
+  teto de gasto; chave só como segredo do servidor).
+- D28: enviar à Anthropic apenas números agregados (sem descrições, nomes de
+  conta ou e-mails).
+Plano: `financas-em-familia-governanca/PLANO_ANALISES_E_IA.md`.

@@ -9,6 +9,7 @@ const navClass = ({ isActive }: { isActive: boolean }) =>
 
 const NAV = [
   ['/', 'Início'],
+  ['/analises', 'Análises'],
   ['/lancamentos', 'Lançamentos'],
   ['/contas', 'Contas'],
   ['/cartoes', 'Cartões'],
