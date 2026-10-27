@@ -12,6 +12,7 @@ import {
   GROUP_LABEL,
   byWeekday,
   categoryName,
+  categoryGroups,
   categoryRows,
   cumulativeByDay,
   detailRange,
@@ -122,8 +123,9 @@ function Detail({ data, month, todayDay, filtered }: { data: Loaded; month: stri
     : c.expenses_by_member;
   const prevAtSameDay = todayDay ? (prevCurve[Math.min(todayDay, prevCurve.length) - 1] ?? 0) : null;
 
-  const split = splitByGroup(c);
-  const rows = categoryRows(c, p);
+  const groups = categoryGroups(space.categories);
+  const split = splitByGroup(c, groups);
+  const rows = categoryRows(c, p, groups);
   const top = topExpenses(entries, month);
   const weekdays = byWeekday(entries, month);
   const weekMax = Math.max(...weekdays.map((w) => w.total_cents), 1);

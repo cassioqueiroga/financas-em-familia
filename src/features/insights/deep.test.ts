@@ -5,6 +5,7 @@ import { analyze } from './analysis';
 import {
   averageSplit,
   byWeekday,
+  categoryGroups,
   categoryRows,
   cumulativeByDay,
   detectRecurring,
@@ -66,6 +67,37 @@ describe('grupos 50-30-20', () => {
     expect(split).toEqual({ income_cents: 1000000, essential_cents: 500000, lifestyle_cents: 200000, unclassified_cents: 100000, savings_cents: 200000 });
     expect(averageSplit([split, { ...split, essential_cents: 300000 }])!.essential_cents).toBe(400000);
     expect(averageSplit([])).toBeNull();
+  });
+
+  it('usa o grupo escolhido pelo casal e, sem escolha, o automático', () => {
+    const cat = (id: string, name: string, budget_group: 'essential' | 'lifestyle' | null, kind: 'expense' | 'income' = 'expense') => ({
+      id,
+      household_id: 'h-1',
+      name,
+      kind,
+      is_default: false,
+      is_active: true,
+      budget_group,
+      version: 1,
+    });
+    const groups = categoryGroups([cat('c1', 'Moradia', null), cat('c2', 'Viagem', 'lifestyle'), cat('c3', 'Mercado', 'lifestyle'), cat('c4', 'Bônus', null, 'income')]);
+    expect([...groups.entries()]).toEqual([
+      ['c1', 'essential'],
+      ['c2', 'lifestyle'],
+      ['c3', 'lifestyle'],
+    ]);
+    const s = makeSummary({
+      income_cents: 100000,
+      expense_cents: 60000,
+      result_cents: 40000,
+      expenses_by_category: [
+        { category_id: 'c2', name: 'Viagem', total_cents: 30000 },
+        { category_id: 'c3', name: 'Mercado', total_cents: 20000 },
+        { category_id: 'c9', name: 'Farmácia', total_cents: 10000 },
+      ],
+    });
+    expect(splitByGroup(s, groups)).toMatchObject({ essential_cents: 0, lifestyle_cents: 50000, unclassified_cents: 10000 });
+    expect(categoryRows(s, null, groups).map((r) => r.group)).toEqual(['lifestyle', 'lifestyle', 'unclassified']);
   });
 });
 

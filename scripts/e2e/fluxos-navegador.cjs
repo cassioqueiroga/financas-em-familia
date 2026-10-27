@@ -225,6 +225,12 @@ const text = async (page) => (await page.locator('main').innerText()).replace(/\
     await chefe.getByRole('group', { name: 'Categorias de despesa' }).getByRole('button', { name: 'Sem categoria' }).click();
     await chefe.getByText('Despesas filtradas no ano').waitFor();
     ok('filtro por categoria muda os números de despesa', (await text(chefe)).includes('1 selecionada'));
+    await nav(chefe, '/categorias');
+    await chefe.getByLabel('Grupo de Lazer').selectOption('essential');
+    await chefe.getByText('Grupo de “Lazer” atualizado.').waitFor();
+    await chefe.reload();
+    await chefe.getByLabel('Grupo de Lazer').waitFor();
+    ok('grupo 50-30-20 escolhido na categoria fica salvo', (await chefe.getByLabel('Grupo de Lazer').inputValue()) === 'essential');
     await nav(esposa, '/analises');
     await esposa.getByRole('heading', { name: 'Diagnóstico e sugestões' }).waitFor();
     ok('análises da esposa carregam só com o que ela vê', (await text(esposa)).includes('Evolução mensal'));

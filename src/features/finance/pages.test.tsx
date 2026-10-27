@@ -309,8 +309,8 @@ describe('Ano até agora e filtro', () => {
   it('mostra o YTD e aplica o filtro de categoria', async () => {
     const { finance, user } = setup('/analises', [checking], {
       listCategories: async () => [
-        { id: 'c-m', household_id: 'h-1', name: 'Mercado', kind: 'expense', is_active: true, is_default: true, version: 1 },
-        { id: 'c-l', household_id: 'h-1', name: 'Lazer', kind: 'expense', is_active: true, is_default: true, version: 1 },
+        { id: 'c-m', household_id: 'h-1', name: 'Mercado', kind: 'expense', is_active: true, is_default: true, budget_group: null, version: 1 },
+        { id: 'c-l', household_id: 'h-1', name: 'Lazer', kind: 'expense', is_active: true, is_default: true, budget_group: null, version: 1 },
       ],
       monthlySummary: async (_h, month) =>
         makeSummary({
@@ -332,5 +332,22 @@ describe('Ano até agora e filtro', () => {
     await waitFor(() => expect(within(screen.getByRole('region', { name: 'Categorias no ano' })).queryByText('Lazer')).not.toBeInTheDocument());
     expect(screen.getByText('Despesas filtradas no ano')).toBeInTheDocument();
     expect(finance.calls.monthlySummary!.length).toBeGreaterThan(0);
+  });
+});
+
+describe('Categorias: grupo 50-30-20', () => {
+  it('mostra o grupo automático e salva o grupo escolhido', async () => {
+    const { finance, user } = setup('/categorias', [checking], {
+      listCategories: async () => [
+        { id: 'c-v', household_id: 'h-1', name: 'Viagem', kind: 'expense', is_active: true, is_default: false, budget_group: null, version: 3 },
+        { id: 'c-s', household_id: 'h-1', name: 'Salário', kind: 'income', is_active: true, is_default: true, budget_group: null, version: 1 },
+      ],
+    });
+    const select = await screen.findByLabelText('Grupo de Viagem');
+    expect(select).toHaveDisplayValue('Automático (Sem grupo)');
+    expect(screen.queryByLabelText('Grupo de Salário')).not.toBeInTheDocument();
+    await user.selectOptions(select, 'Estilo de vida');
+    await waitFor(() => expect(finance.calls.setCategoryGroup).toEqual([['c-v', 3, 'lifestyle']]));
+    expect(await screen.findByText('Grupo de “Viagem” atualizado.')).toBeInTheDocument();
   });
 });

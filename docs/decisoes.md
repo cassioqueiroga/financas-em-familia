@@ -199,5 +199,18 @@ Pedido: "vamos adicionar um YTD e filtros para categorizar". Sem migração e se
 - Filtro de categorias (uma ou várias, mais "Sem categoria") em todas as abas
   de Análises. Vale só para os números de despesa; receita, resultado, índice
   de saúde, 50-30-20 e diagnóstico seguem com todos os dados, e a tela avisa.
-- Escolher o grupo (necessidade/estilo de vida) das categorias criadas pelo
-  casal continua pendente: exige migração no Supabase real e autorização.
+- Escolher o grupo (necessidade/estilo de vida) por categoria virou a D31.
+
+## D31 — Grupo 50-30-20 escolhido por categoria (autorizada pelo proprietário em 27/10/2026: "Sim, pode mudar o banco")
+Migração 0008 (`20261027000100_category_budget_group.sql`), só aditiva:
+- `categories.budget_group` opcional (`essential` | `lifestyle`), só para
+  despesa; `null` = automático (categorias padrão pela regra do app, as
+  criadas pelo casal "sem grupo").
+- Função nova `set_category_group(categoria, versão, grupo)`, com o mesmo
+  controle de permissão e versão de `update_category` (que não mudou).
+- Tela Categorias: seletor de grupo em cada categoria de despesa. Regra
+  50-30-20, índice de saúde e tabelas de categoria usam o grupo escolhido.
+- Ordem de publicação: aplicar `migracao_0008_grupo_categorias.sql` no
+  Supabase real ANTES de publicar o app (o app passa a ler a coluna nova).
+  Conferência: `conferir.sql` muda de 28 para 29 funções públicas e
+  `conferir_0008.sql` deve mostrar 1 · 1 · 0.

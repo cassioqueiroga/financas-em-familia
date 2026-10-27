@@ -4,14 +4,19 @@ import { Field, Select, TextInput } from '@/components/form/Field';
 import { Button } from '@/components/ui/Button';
 import { ErrorState, SuccessState } from '@/components/ui/StatusViews';
 import { toUserMessage } from '@/lib/errors';
+import { GROUP_LABEL, groupOf } from '@/features/insights/deep';
 import { useFinance } from './FinanceContext';
 import { PageHeader, SpaceGate, useIdempotencyKey, useWritableAccounts } from './shared';
-import type { Category, CategoryKind } from './types';
+import type { BudgetGroup, Category, CategoryKind } from './types';
 
 export function CategoriesPage() {
   return (
     <section aria-labelledby="titulo-categorias" className="space-y-6">
-      <PageHeader id="titulo-categorias" title="Categorias" description="Organizam receitas e despesas do espaço. Desativar não altera lançamentos antigos." />
+      <PageHeader
+        id="titulo-categorias"
+        title="Categorias"
+        description="Organizam receitas e despesas do espaço. Desativar não altera lançamentos antigos. O grupo de cada despesa (necessidade ou estilo de vida) alimenta a regra 50-30-20 das Análises."
+      />
       <SpaceGate>
         <Categories />
       </SpaceGate>
@@ -62,6 +67,17 @@ function Categories() {
     }
   }
 
+  async function setGroup(c: Category, group: BudgetGroup | null) {
+    try {
+      await finance.setCategoryGroup(c.id, c.version, group);
+      setError(null);
+      setSuccess(`Grupo de “${c.name}” atualizado.`);
+      await reload();
+    } catch (err) {
+      setError(toUserMessage(err, 'atualizar o grupo da categoria'));
+    }
+  }
+
   return (
     <div className="space-y-6">
       {success && <SuccessState message={success} />}
@@ -74,7 +90,7 @@ function Categories() {
               {data.categories
                 .filter((c) => c.kind === kind)
                 .map((c) => (
-                  <CategoryRow key={c.id} category={c} canEdit={canEdit} onSave={update} />
+                  <CategoryRow key={c.id} category={c} canEdit={canEdit} onSave={update} onGroup={setGroup} />
                 ))}
             </ul>
           </section>
@@ -105,8 +121,19 @@ function Categories() {
   );
 }
 
-function CategoryRow({ category: c, canEdit, onSave }: { category: Category; canEdit: boolean; onSave(c: Category, name: string, active: boolean): Promise<void> }) {
+function CategoryRow({
+  category: c,
+  canEdit,
+  onSave,
+  onGroup,
+}: {
+  category: Category;
+  canEdit: boolean;
+  onSave(c: Category, name: string, active: boolean): Promise<void>;
+  onGroup(c: Category, group: BudgetGroup | null): Promise<void>;
+}) {
   const [editing, setEditing] = useState(false);
+  const automatic = GROUP_LABEL[groupOf(c.name)];
   return (
     <li className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
       {editing ? (
@@ -130,7 +157,27 @@ function CategoryRow({ category: c, canEdit, onSave }: { category: Category; can
         <span className={c.is_active ? '' : 'text-ink/50 line-through'}>
           {c.name}
           {!c.is_active && <span className="sr-only"> (desativada)</span>}
+          {c.kind === 'expense' && !canEdit && (
+            <span className="block text-xs text-ink/60">{c.budget_group ? GROUP_LABEL[c.budget_group] : `${automatic} (automático)`}</span>
+          )}
         </span>
+      )}
+      {c.kind === 'expense' && canEdit && !editing && (
+        <>
+          <label htmlFor={`grupo-${c.id}`} className="sr-only">
+            Grupo de {c.name}
+          </label>
+          <Select
+            id={`grupo-${c.id}`}
+            value={c.budget_group ?? ''}
+            onChange={(e) => void onGroup(c, (e.target.value || null) as BudgetGroup | null)}
+            className="w-auto py-1 text-xs"
+          >
+            <option value="">Automático ({automatic})</option>
+            <option value="essential">{GROUP_LABEL.essential}</option>
+            <option value="lifestyle">{GROUP_LABEL.lifestyle}</option>
+          </Select>
+        </>
       )}
       {canEdit && !editing && (
         <span className="flex gap-1">
