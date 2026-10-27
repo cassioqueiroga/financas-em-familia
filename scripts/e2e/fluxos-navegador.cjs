@@ -212,6 +212,12 @@ const text = async (page) => (await page.locator('main').innerText()).replace(/\
     await chefe.getByRole('button', { name: '12 meses' }).click();
     await chefe.waitForTimeout(800);
     ok('análises: período de 12 meses', (await chefe.locator('#titulo-evolucao ~ div table tbody tr').count()) === 12);
+    const deep = await text(chefe);
+    ok('análises: índice de saúde, 50-30-20 e recorrentes', deep.includes('Índice de saúde financeira') && deep.includes('regra 50-30-20') && deep.includes('Despesas recorrentes detectadas'));
+    await chefe.getByRole('button', { name: 'Mês em detalhe' }).click();
+    await chefe.getByRole('heading', { name: 'Ritmo de gastos no mês' }).waitFor();
+    const md = await text(chefe);
+    ok('mês em detalhe: ritmo, projeção e maiores despesas', md.includes('No ritmo atual') && md.includes('Maiores despesas do mês'));
     await nav(esposa, '/analises');
     await esposa.getByRole('heading', { name: 'Diagnóstico e sugestões' }).waitFor();
     ok('análises da esposa carregam só com o que ela vê', (await text(esposa)).includes('Evolução mensal'));

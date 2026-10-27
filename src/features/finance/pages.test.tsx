@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Account, Entry } from '@/features/finance/types';
 import { fakeAuth, fakeFinance, fakeHouseholds, fakeSharing, makeAccount, makeEntry, makeHousehold, makeSummary, writeGrants } from '@/test/fakes';
 import { renderApp } from '@/test/render';
+import { currentMonth } from '@/lib/dates';
 
 const signedIn = () => fakeAuth({ id: 'u-1', email: null });
 const family = makeHousehold({ id: 'h-1', name: 'Família', kind: 'family' });
@@ -271,5 +272,35 @@ describe('Análises', () => {
     const { finance, user } = setup('/analises', [checking]);
     await user.click(await screen.findByRole('button', { name: '12 meses' }));
     await waitFor(() => expect(finance.calls.monthlySummary).toHaveLength(18));
+  });
+});
+
+describe('Análises aprofundadas', () => {
+  it('mostra índice de saúde e regra 50-30-20 na visão do período', async () => {
+    setup('/analises', [checking], {
+      monthlySummary: async (_h, month) =>
+        makeSummary({
+          month: `${month}-01`,
+          income_cents: 1000000,
+          expense_cents: 700000,
+          result_cents: 300000,
+          available_cents: 3000000,
+          expenses_by_category: [{ category_id: 'c-1', name: 'Moradia', total_cents: 700000 }],
+        }),
+    });
+    expect(await screen.findByRole('heading', { name: 'Índice de saúde financeira' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /regra 50-30-20/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Despesas recorrentes detectadas' })).toBeInTheDocument();
+  });
+
+  it('abre o mês em detalhe com ritmo, maiores despesas e dias da semana', async () => {
+    const { finance, user } = setup('/analises', [checking], {
+      listEntries: async () => [makeEntry({ id: 'x-1', description: 'Aluguel', amount_cents: 250000, occurred_on: `${currentMonth()}-01` })],
+    });
+    await user.click(await screen.findByRole('button', { name: 'Mês em detalhe' }));
+    expect(await screen.findByRole('heading', { name: 'Ritmo de gastos no mês' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Gastos por dia da semana' })).toBeInTheDocument();
+    expect(within(screen.getByRole('region', { name: 'Maiores despesas do mês' })).getByText('Aluguel')).toBeInTheDocument();
+    await waitFor(() => expect(finance.calls.listEntries!.length).toBeGreaterThanOrEqual(2));
   });
 });

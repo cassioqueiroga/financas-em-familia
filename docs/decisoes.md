@@ -171,3 +171,19 @@ site) depende de autorização do proprietário.
 - D28: enviar à Anthropic apenas números agregados (sem descrições, nomes de
   conta ou e-mails).
 Plano: `financas-em-familia-governanca/PLANO_ANALISES_E_IA.md`.
+
+## D29 — Análises aprofundadas e mês em detalhe (aceita: "pode publicar e ir ajustando")
+Modelos pesquisados e adaptados, ainda sem migração e sem IA (`src/features/insights/deep.ts`):
+- Índice de saúde financeira 0–100, inspirado no FinHealth Score (Financial
+  Health Network): Gastar (poupança média, −10%→0, 20%→100), Reserva
+  (meses/6), Dívidas (fatura do próximo mês sobre a receita: ≤10%→100,
+  ≥50%→0) e Organização (despesa categorizada e meses com lançamento).
+  Faixas: ≥80 saudável, 40–79 em equilíbrio, <40 vulnerável.
+- Regra 50-30-20 pelas categorias padrão; categorias criadas pelo casal ficam
+  "sem grupo" (escolher o grupo por categoria exigiria migração).
+- Despesas recorrentes: mesma descrição normalizada em ≥3 meses, valor ±25%.
+- Mês em detalhe: comparação com o mês anterior e o mesmo mês do ano
+  anterior, ritmo de gasto acumulado com projeção do fim do mês, destino do
+  dinheiro, categorias com participação, maiores despesas, receitas por
+  categoria, despesas por pessoa e por dia da semana.
+- Cores de gráfico validadas para daltonismo (tokens `--color-chart-*`).

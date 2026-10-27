@@ -1,23 +1,28 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useServices } from '@/app/services';
 import { Amount } from '@/components/ui/Amount';
 import { Button } from '@/components/ui/Button';
 import { ErrorState, LoadingState } from '@/components/ui/StatusViews';
-import { currentMonth, formatMonth } from '@/lib/dates';
+import { currentMonth, formatMonth, monthBounds } from '@/lib/dates';
 import { toUserMessage } from '@/lib/errors';
 import { useFinance } from '@/features/finance/FinanceContext';
 import { MonthPicker, PageHeader, SpaceGate } from '@/features/finance/shared';
+import type { Entry, MonthlySummary } from '@/features/finance/types';
 import { analyze, formatPercent, monthRange, type Analysis, type Insight, type InsightLevel } from './analysis';
+import { BudgetRuleCard, HealthCard, RecurringCard } from './DeepCards';
+import { MonthDetail } from './MonthDetail';
+import { formatBRL, monthTitle, shortMonth } from './format';
+import { Tile } from './ui';
 
-type State = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; analysis: Analysis };
+type State =
+  | { status: 'loading' }
+  | { status: 'error'; message: string }
+  | { status: 'ready'; analysis: Analysis; summaries: MonthlySummary[]; entries: Entry[] };
+
+type Tab = 'period' | 'month';
 
 const PERIODS = [6, 12] as const;
 
-const SHORT_MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-/** "outubro de 2026" → "Outubro de 2026" (CSS capitalize também afetaria "de"). */
-const monthTitle = (month: string) => formatMonth(month).replace(/^./, (c) => c.toUpperCase());
-
-const shortMonth = (month: string) => `${SHORT_MONTHS[Number(month.slice(5, 7)) - 1]}/${month.slice(2, 4)}`;
 
 export function InsightsPage() {
   return (
@@ -41,17 +46,20 @@ function Insights() {
   const [reference, setReference] = useState(today);
   const [period, setPeriod] = useState<(typeof PERIODS)[number]>(6);
   const [state, setState] = useState<State>({ status: 'loading' });
+  const [tab, setTab] = useState<Tab>('period');
   const householdId = active?.id;
   const cardIds = data.accounts.filter((a) => a.kind === 'credit_card').map((a) => a.id).join(',');
 
   const load = useCallback(async (): Promise<State> => {
     if (!householdId) return { status: 'loading' };
     try {
-      const [summaries, statements] = await Promise.all([
-        Promise.all(monthRange(reference, period).map((m) => finance.monthlySummary(householdId, m))),
+      const months = monthRange(reference, period);
+      const [summaries, statements, entries] = await Promise.all([
+        Promise.all(months.map((m) => finance.monthlySummary(householdId, m))),
         Promise.all(cardIds ? cardIds.split(',').map((id) => finance.cardStatements(id)) : []),
+        finance.listEntries(householdId, monthBounds(months[0]!).from, monthBounds(reference).to),
       ]);
-      return { status: 'ready', analysis: analyze({ summaries, statements: statements.flat(), today }) };
+      return { status: 'ready', analysis: analyze({ summaries, statements: statements.flat(), today }), summaries, entries };
     } catch (err) {
       return { status: 'error', message: toUserMessage(err, 'carregar análises') };
     }
@@ -67,18 +75,31 @@ function Insights() {
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Tipo de análise">
+        <Button variant={tab === 'period' ? 'primary' : 'secondary'} aria-pressed={tab === 'period'} onClick={() => setTab('period')}>
+          Visão do período
+        </Button>
+        <Button variant={tab === 'month' ? 'primary' : 'secondary'} aria-pressed={tab === 'month'} onClick={() => setTab('month')}>
+          Mês em detalhe
+        </Button>
+      </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Período analisado">
-          {PERIODS.map((p) => (
-            <Button key={p} variant={p === period ? 'primary' : 'secondary'} aria-pressed={p === period} onClick={() => setPeriod(p)}>
-              {p} meses
-            </Button>
-          ))}
-        </div>
+        {tab === 'period' ? (
+          <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Período analisado">
+            {PERIODS.map((p) => (
+              <Button key={p} variant={p === period ? 'primary' : 'secondary'} aria-pressed={p === period} onClick={() => setPeriod(p)}>
+                {p} meses
+              </Button>
+            ))}
+          </div>
+        ) : (
+          <span />
+        )}
         <MonthPicker month={reference} onChange={setReference} />
       </div>
-      {state.status === 'loading' && <LoadingState label="Calculando análises…" />}
-      {state.status === 'error' && (
+      {tab === 'month' && householdId && <MonthDetail householdId={householdId} month={reference} today={today} timezone={active?.timezone} />}
+      {tab === 'period' && state.status === 'loading' && <LoadingState label="Calculando análises…" />}
+      {tab === 'period' && state.status === 'error' && (
         <ErrorState
           message={state.message}
           action={
@@ -88,15 +109,22 @@ function Insights() {
           }
         />
       )}
-      {state.status === 'ready' && <Report analysis={state.analysis} />}
+      {tab === 'period' && state.status === 'ready' && <Report analysis={state.analysis} summaries={state.summaries} entries={state.entries} />}
     </div>
   );
 }
 
-function Report({ analysis: a }: { analysis: Analysis }) {
+function Report({ analysis: a, summaries, entries }: { analysis: Analysis; summaries: MonthlySummary[]; entries: Entry[] }) {
   const ref = a.series.at(-1)!;
+  const last = summaries.at(-1)!;
+  const complete = new Set(a.completeMonths.map((p) => p.month));
   return (
     <>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <HealthCard analysis={a} last={last} />
+        <BudgetRuleCard summaries={summaries.filter((s) => complete.has(s.month.slice(0, 7)))} />
+      </div>
+
       <Diagnosis insights={a.insights} />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -120,19 +148,12 @@ function Report({ analysis: a }: { analysis: Analysis }) {
         <Categories analysis={a} partial={ref.partial} />
         <Future analysis={a} />
       </div>
+
+      <RecurringCard entries={entries} averageExpense={a.averages.expense_cents} />
     </>
   );
 }
 
-function Tile({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
-  return (
-    <div className="rounded-xl bg-white p-4 shadow-sm">
-      <p className="text-sm text-ink/70">{label}</p>
-      <p className="mt-1 text-xl font-bold tabular-nums">{children}</p>
-      {hint && <p className="mt-1 text-xs text-ink/60">{hint}</p>}
-    </div>
-  );
-}
 
 const LEVEL_STYLE: Record<InsightLevel, { label: string; className: string }> = {
   alert: { label: 'Alerta', className: 'border-danger bg-danger/5' },
@@ -180,17 +201,17 @@ function Evolution({ analysis: a }: { analysis: Analysis }) {
       </h2>
       <p className="mb-3 flex flex-wrap gap-4 text-xs text-ink/70">
         <span className="flex items-center gap-1">
-          <span aria-hidden="true" className="inline-block size-3 rounded-sm bg-brand-500" /> Receitas
+          <span aria-hidden="true" className="inline-block size-3 rounded-sm bg-chart-income" /> Receitas
         </span>
         <span className="flex items-center gap-1">
-          <span aria-hidden="true" className="inline-block size-3 rounded-sm bg-danger" /> Despesas
+          <span aria-hidden="true" className="inline-block size-3 rounded-sm bg-chart-expense" /> Despesas
         </span>
       </p>
       <div aria-hidden="true" className="flex h-40 items-end gap-2 overflow-x-auto border-b border-ink/10">
         {a.series.map((p) => (
           <div key={p.month} className="flex h-full min-w-8 flex-1 items-end justify-center gap-0.5">
-            <div className="w-1/2 max-w-4 rounded-t bg-brand-500" style={{ height: `${(p.income_cents / max) * 100}%` }} />
-            <div className="w-1/2 max-w-4 rounded-t bg-danger" style={{ height: `${(p.expense_cents / max) * 100}%` }} />
+            <div title={`Receitas: ${formatBRL(p.income_cents)}`} className="w-1/2 max-w-4 rounded-t bg-chart-income" style={{ height: `${(p.income_cents / max) * 100}%` }} />
+            <div title={`Despesas: ${formatBRL(p.expense_cents)}`} className="w-1/2 max-w-4 rounded-t bg-chart-expense" style={{ height: `${(p.expense_cents / max) * 100}%` }} />
           </div>
         ))}
       </div>

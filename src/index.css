@@ -17,6 +17,11 @@
   /* Variantes escuras para TEXTO pequeno sobre fundo claro (contraste ≥ 4,5:1). */
   --color-danger-text: #b42318;
   --color-success-text: #11643f;
+  /* Gráficos (validados para daltonismo com a skill dataviz, fundo claro):
+   * receita/poupança, despesa/estilo de vida, essenciais. Texto nunca usa estas cores. */
+  --color-chart-income: #1f7a52;
+  --color-chart-expense: #d97706;
+  --color-chart-essential: #3b6fd1;
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
