@@ -218,6 +218,13 @@ const text = async (page) => (await page.locator('main').innerText()).replace(/\
     await chefe.getByRole('heading', { name: 'Ritmo de gastos no mês' }).waitFor();
     const md = await text(chefe);
     ok('mês em detalhe: ritmo, projeção e maiores despesas', md.includes('No ritmo atual') && md.includes('Maiores despesas do mês'));
+    await chefe.getByRole('button', { name: 'Ano até agora' }).click();
+    await chefe.getByRole('heading', { name: 'Categorias no ano' }).waitFor();
+    ok('ano até agora: acumulado e comparação com o ano anterior', (await text(chefe)).includes('Despesa acumulada no ano'));
+    await chefe.getByText(/Filtrar despesas por categoria/).click();
+    await chefe.getByRole('group', { name: 'Categorias de despesa' }).getByRole('button', { name: 'Sem categoria' }).click();
+    await chefe.getByText('Despesas filtradas no ano').waitFor();
+    ok('filtro por categoria muda os números de despesa', (await text(chefe)).includes('1 selecionada'));
     await nav(esposa, '/analises');
     await esposa.getByRole('heading', { name: 'Diagnóstico e sugestões' }).waitFor();
     ok('análises da esposa carregam só com o que ela vê', (await text(esposa)).includes('Evolução mensal'));

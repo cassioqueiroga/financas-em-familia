@@ -43,6 +43,8 @@ Tela Análises: evolução de 6/12 meses, poupança, categorias × média,
 faturas comprometidas, reserva de emergência e diagnóstico por regras.
 Limite conhecido: 12 meses = 12 chamadas de `monthly_summary` em paralelo;
 se ficar lento, uma função única no banco resolve (exigiria migração).
+O "Ano até agora" (D30) faz até 24 chamadas (ano atual e anterior).
+Grupo 50-30-20 das categorias criadas pelo casal: exige migração (pendente).
 
 ## Não iniciado (fora do núcleo; nenhum depende de serviço pago, mas ficou para depois)
 

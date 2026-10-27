@@ -187,3 +187,17 @@ Modelos pesquisados e adaptados, ainda sem migração e sem IA (`src/features/in
   dinheiro, categorias com participação, maiores despesas, receitas por
   categoria, despesas por pessoa e por dia da semana.
 - Cores de gráfico validadas para daltonismo (tokens `--color-chart-*`).
+
+## D30 — Ano até agora (YTD) e filtro por categoria (implementada em branch; publicação aguarda o proprietário)
+Pedido: "vamos adicionar um YTD e filtros para categorizar". Sem migração e sem IA
+(`src/features/insights/ytd.ts`):
+- Aba "Ano até agora": janeiro até o mês escolhido, comparado com os mesmos
+  meses do ano anterior (receitas, despesas, resultado, taxa de poupança),
+  despesa acumulada mês a mês e tabela de categorias no ano com fatia,
+  média por mês e variação. Meses antes do começo do uso do app ficam fora
+  das linhas e das médias. Projeção do ano pelo ritmo dos meses fechados.
+- Filtro de categorias (uma ou várias, mais "Sem categoria") em todas as abas
+  de Análises. Vale só para os números de despesa; receita, resultado, índice
+  de saúde, 50-30-20 e diagnóstico seguem com todos os dados, e a tela avisa.
+- Escolher o grupo (necessidade/estilo de vida) das categorias criadas pelo
+  casal continua pendente: exige migração no Supabase real e autorização.

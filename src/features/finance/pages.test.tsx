@@ -304,3 +304,33 @@ describe('Análises aprofundadas', () => {
     await waitFor(() => expect(finance.calls.listEntries!.length).toBeGreaterThanOrEqual(2));
   });
 });
+
+describe('Ano até agora e filtro', () => {
+  it('mostra o YTD e aplica o filtro de categoria', async () => {
+    const { finance, user } = setup('/analises', [checking], {
+      listCategories: async () => [
+        { id: 'c-m', household_id: 'h-1', name: 'Mercado', kind: 'expense', is_active: true, is_default: true, version: 1 },
+        { id: 'c-l', household_id: 'h-1', name: 'Lazer', kind: 'expense', is_active: true, is_default: true, version: 1 },
+      ],
+      monthlySummary: async (_h, month) =>
+        makeSummary({
+          month: `${month}-01`,
+          income_cents: 500000,
+          expense_cents: 150000,
+          result_cents: 350000,
+          expenses_by_category: [
+            { category_id: 'c-m', name: 'Mercado', total_cents: 100000 },
+            { category_id: 'c-l', name: 'Lazer', total_cents: 50000 },
+          ],
+        }),
+    });
+    await user.click(await screen.findByRole('button', { name: 'Ano até agora' }));
+    const region = await screen.findByRole('region', { name: 'Categorias no ano' });
+    expect(within(region).getByText('Lazer')).toBeInTheDocument();
+    await user.click(screen.getByText(/Filtrar despesas por categoria/));
+    await user.click(within(screen.getByRole('group', { name: 'Categorias de despesa' })).getByRole('button', { name: 'Mercado' }));
+    await waitFor(() => expect(within(screen.getByRole('region', { name: 'Categorias no ano' })).queryByText('Lazer')).not.toBeInTheDocument());
+    expect(screen.getByText('Despesas filtradas no ano')).toBeInTheDocument();
+    expect(finance.calls.monthlySummary!.length).toBeGreaterThan(0);
+  });
+});
