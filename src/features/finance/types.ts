@@ -40,6 +40,9 @@ export interface AccountGrant {
   access: GrantAccess;
 }
 
+/** Grupo 50-30-20 escolhido pelo casal; null = automático (D31). */
+export type BudgetGroup = 'essential' | 'lifestyle';
+
 export interface Category {
   id: string;
   household_id: string;
@@ -47,6 +50,7 @@ export interface Category {
   kind: CategoryKind;
   is_default: boolean;
   is_active: boolean;
+  budget_group: BudgetGroup | null;
   version: number;
 }
 
@@ -237,6 +241,7 @@ export interface FinanceRepository {
   listCategories(householdId: string): Promise<Category[]>;
   createCategory(householdId: string, name: string, kind: CategoryKind, idempotencyKey: string): Promise<Category>;
   updateCategory(categoryId: string, expectedVersion: number, name: string, active: boolean): Promise<Category>;
+  setCategoryGroup(categoryId: string, expectedVersion: number, group: BudgetGroup | null): Promise<Category>;
 
   listEntries(householdId: string, from: string, to: string): Promise<Entry[]>;
   createEntry(input: EntryInput): Promise<Entry>;

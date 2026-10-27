@@ -3,7 +3,7 @@ import { useFinance } from '@/features/finance/FinanceContext';
 import type { Entry, MonthlySummary } from '@/features/finance/types';
 import { formatBusinessDate } from '@/lib/dates';
 import type { Analysis } from './analysis';
-import { BAND_LABEL, GROUP_LABEL, averageSplit, categoryName, detectRecurring, healthScore, splitByGroup, type BudgetSplit } from './deep';
+import { BAND_LABEL, GROUP_LABEL, averageSplit, categoryGroups, categoryName, detectRecurring, healthScore, splitByGroup, type BudgetSplit } from './deep';
 import { Card, STRIPES, StackedBar } from './ui';
 
 const pct = (part: number, whole: number) => (whole > 0 ? `${Math.round((part / whole) * 100)}%` : '—');
@@ -80,7 +80,9 @@ function SplitLegend({ split }: { split: BudgetSplit }) {
 }
 
 export function BudgetRuleCard({ summaries }: { summaries: MonthlySummary[] }) {
-  const split = averageSplit(summaries.map(splitByGroup));
+  const { data } = useFinance();
+  const groups = categoryGroups(data.categories);
+  const split = averageSplit(summaries.map((s) => splitByGroup(s, groups)));
   return (
     <Card
       id="titulo-503020"
@@ -104,7 +106,7 @@ export function BudgetRuleCard({ summaries }: { summaries: MonthlySummary[] }) {
           <SplitLegend split={split} />
           <p className="mt-2 text-xs text-ink/60">
             Grupos pelas categorias padrão: Moradia, Mercado, Transporte, Saúde, Educação, Contas, Impostos e Pets são necessidades; as demais
-            padrão são estilo de vida. Categorias criadas por vocês ficam "sem grupo".
+            padrão são estilo de vida. O grupo de qualquer categoria de despesa pode ser trocado em Categorias.
           </p>
         </>
       )}

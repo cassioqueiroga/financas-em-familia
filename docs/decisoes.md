@@ -187,3 +187,30 @@ Modelos pesquisados e adaptados, ainda sem migração e sem IA (`src/features/in
   dinheiro, categorias com participação, maiores despesas, receitas por
   categoria, despesas por pessoa e por dia da semana.
 - Cores de gráfico validadas para daltonismo (tokens `--color-chart-*`).
+
+## D30 — Ano até agora (YTD) e filtro por categoria (implementada em branch; publicação aguarda o proprietário)
+Pedido: "vamos adicionar um YTD e filtros para categorizar". Sem migração e sem IA
+(`src/features/insights/ytd.ts`):
+- Aba "Ano até agora": janeiro até o mês escolhido, comparado com os mesmos
+  meses do ano anterior (receitas, despesas, resultado, taxa de poupança),
+  despesa acumulada mês a mês e tabela de categorias no ano com fatia,
+  média por mês e variação. Meses antes do começo do uso do app ficam fora
+  das linhas e das médias. Projeção do ano pelo ritmo dos meses fechados.
+- Filtro de categorias (uma ou várias, mais "Sem categoria") em todas as abas
+  de Análises. Vale só para os números de despesa; receita, resultado, índice
+  de saúde, 50-30-20 e diagnóstico seguem com todos os dados, e a tela avisa.
+- Escolher o grupo (necessidade/estilo de vida) por categoria virou a D31.
+
+## D31 — Grupo 50-30-20 escolhido por categoria (autorizada pelo proprietário em 27/10/2026: "Sim, pode mudar o banco")
+Migração 0008 (`20261027000100_category_budget_group.sql`), só aditiva:
+- `categories.budget_group` opcional (`essential` | `lifestyle`), só para
+  despesa; `null` = automático (categorias padrão pela regra do app, as
+  criadas pelo casal "sem grupo").
+- Função nova `set_category_group(categoria, versão, grupo)`, com o mesmo
+  controle de permissão e versão de `update_category` (que não mudou).
+- Tela Categorias: seletor de grupo em cada categoria de despesa. Regra
+  50-30-20, índice de saúde e tabelas de categoria usam o grupo escolhido.
+- Ordem de publicação: aplicar `migracao_0008_grupo_categorias.sql` no
+  Supabase real ANTES de publicar o app (o app passa a ler a coluna nova).
+  Conferência: `conferir.sql` muda de 28 para 29 funções públicas e
+  `conferir_0008.sql` deve mostrar 1 · 1 · 0.

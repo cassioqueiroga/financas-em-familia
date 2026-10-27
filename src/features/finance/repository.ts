@@ -15,7 +15,7 @@ import type {
 
 const ACCOUNT_COLUMNS =
   'id, household_id, owner_user_id, name, kind, initial_balance_cents, initial_balance_date, credit_limit_cents, closing_day, due_day, is_active, version';
-const CATEGORY_COLUMNS = 'id, household_id, name, kind, is_default, is_active, version';
+const CATEGORY_COLUMNS = 'id, household_id, name, kind, is_default, is_active, budget_group, version';
 const PURCHASE_COLUMNS = 'id, card_account_id, description, total_cents, installment_count, purchased_on, category_id, attributed_to, status, version';
 
 async function unwrap<T>(promise: PromiseLike<{ data: unknown; error: unknown }>): Promise<T> {
@@ -83,6 +83,8 @@ export function createSupabaseFinanceRepository(client: SupabaseClient): Finance
       unwrap<Category>(
         client.rpc('update_category', { p_category_id: categoryId, p_expected_version: expectedVersion, p_name: name, p_active: active }),
       ),
+    setCategoryGroup: (categoryId, expectedVersion, group) =>
+      unwrap<Category>(client.rpc('set_category_group', { p_category_id: categoryId, p_expected_version: expectedVersion, p_group: group })),
 
     listEntries: (householdId, from, to) =>
       unwrap<Entry[]>(client.rpc('list_entries', { p_household_id: householdId, p_from: from, p_to: to })),

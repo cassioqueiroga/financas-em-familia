@@ -34,7 +34,7 @@ const normalize = (text: string) =>
     .replace(/\p{Diacritic}/gu, '')
     .trim();
 
-/** Classificação pelas categorias padrão do app; categorias criadas pelo casal ficam "sem grupo". */
+/** Classificação automática pelas categorias padrão do app; as criadas pelo casal ficam "sem grupo" até terem um grupo escolhido (D31). */
 const GROUP_BY_NAME: Record<string, SpendGroup> = {
   moradia: 'essential',
   mercado: 'essential',
@@ -57,6 +57,16 @@ export function groupOf(categoryName: string | null): SpendGroup {
   return GROUP_BY_NAME[normalize(categoryName)] ?? 'unclassified';
 }
 
+/** Grupo de cada categoria de despesa: o escolhido pelo casal ou, sem escolha, o automático. */
+export type CategoryGroups = ReadonlyMap<string, SpendGroup>;
+
+export function categoryGroups(categories: Category[]): CategoryGroups {
+  return new Map(categories.filter((c) => c.kind === 'expense').map((c) => [c.id, c.budget_group ?? groupOf(c.name)]));
+}
+
+const groupFor = (c: { category_id: string | null; name: string | null }, groups?: CategoryGroups) =>
+  (c.category_id && groups?.get(c.category_id)) || groupOf(c.name);
+
 export interface BudgetSplit {
   income_cents: number;
   essential_cents: number;
@@ -66,9 +76,12 @@ export interface BudgetSplit {
   savings_cents: number;
 }
 
-export function splitByGroup(summary: Pick<MonthlySummary, 'income_cents' | 'expense_cents' | 'result_cents' | 'expenses_by_category'>): BudgetSplit {
+export function splitByGroup(
+  summary: Pick<MonthlySummary, 'income_cents' | 'expense_cents' | 'result_cents' | 'expenses_by_category'>,
+  groups?: CategoryGroups,
+): BudgetSplit {
   const split = { essential: 0, lifestyle: 0, unclassified: 0 };
-  for (const c of summary.expenses_by_category) split[groupOf(c.name)] += c.total_cents;
+  for (const c of summary.expenses_by_category) split[groupFor(c, groups)] += c.total_cents;
   return {
     income_cents: summary.income_cents,
     essential_cents: split.essential,
@@ -306,13 +319,13 @@ export interface CategoryRow {
   share: number;
 }
 
-export function categoryRows(current: MonthlySummary, previous: MonthlySummary | null): CategoryRow[] {
+export function categoryRows(current: MonthlySummary, previous: MonthlySummary | null, groups?: CategoryGroups): CategoryRow[] {
   const prev = new Map((previous?.expenses_by_category ?? []).map((c) => [c.category_id ?? 'sem', c.total_cents]));
   const total = current.expense_cents || 1;
   return current.expenses_by_category.map((c) => ({
     key: c.category_id ?? 'sem',
     name: c.name ?? 'Sem categoria',
-    group: groupOf(c.name),
+    group: groupFor(c, groups),
     current_cents: c.total_cents,
     previous_cents: prev.get(c.category_id ?? 'sem') ?? 0,
     share: c.total_cents / total,

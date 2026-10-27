@@ -208,6 +208,45 @@ describe('Categorias', () => {
     expect(await sqlState(createEntry(c.chefe, acc.id, { category: otherSpace }))).toBe('23514');
     expect(await sqlState(createEntry(c.chefe, acc.id, { kind: 'expense', category: incomeCat }))).toBe('23514');
   });
+
+  it('membro escolhe o grupo 50-30-20 de uma categoria de despesa, com controle de versão', async () => {
+    const cat = await one<{ id: string; version: number; budget_group: string | null }>(
+      c.chefe,
+      'select * from public.create_category($1, $2, $3, $4)',
+      [c.family, 'Viagem', 'expense', randomUUID()],
+    );
+    expect(cat.budget_group).toBeNull();
+    const set = await one<{ version: number; budget_group: string }>(c.esposa, 'select * from public.set_category_group($1, $2, $3)', [
+      cat.id,
+      cat.version,
+      'lifestyle',
+    ]);
+    expect(set.budget_group).toBe('lifestyle');
+    expect(await sqlState(q(c.chefe, 'select public.set_category_group($1, $2, $3)', [cat.id, cat.version, 'essential']))).toBe('40001');
+    const back = await one<{ budget_group: string | null }>(c.chefe, 'select * from public.set_category_group($1, $2, null)', [cat.id, set.version]);
+    expect(back.budget_group).toBeNull();
+    expect(await sqlState(q(c.chefe, 'select public.set_category_group($1, $2, $3)', [cat.id, set.version + 1, 'outro']))).toBe('23514');
+  });
+
+  it('grupo é recusado em categoria de receita, para quem não é do espaço e para viewer', async () => {
+    const income = await one<{ id: string; version: number }>(c.chefe, 'select id, version from public.categories where household_id = $1 and name = $2', [
+      c.family,
+      'Salário',
+    ]);
+    expect(await sqlState(q(c.chefe, 'select public.set_category_group($1, $2, $3)', [income.id, income.version, 'essential']))).toBe('23514');
+    const lazer = await one<{ id: string; version: number }>(c.chefe, 'select id, version from public.categories where household_id = $1 and name = $2', [
+      c.family,
+      'Lazer',
+    ]);
+    const stranger = await createUser();
+    expect(await sqlState(q(stranger, 'select public.set_category_group($1, $2, $3)', [lazer.id, lazer.version, 'essential']))).toBe('42501');
+    const v = await couple('viewer');
+    const vLazer = await one<{ id: string; version: number }>(v.chefe, 'select id, version from public.categories where household_id = $1 and name = $2', [
+      v.family,
+      'Lazer',
+    ]);
+    expect(await sqlState(q(v.esposa, 'select public.set_category_group($1, $2, $3)', [vLazer.id, vLazer.version, 'essential']))).toBe('42501');
+  });
 });
 
 describe('Receitas, despesas e saldos', () => {

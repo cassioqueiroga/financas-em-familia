@@ -10,7 +10,10 @@ import { MonthPicker, PageHeader, SpaceGate } from '@/features/finance/shared';
 import type { Entry, MonthlySummary } from '@/features/finance/types';
 import { analyze, formatPercent, monthRange, type Analysis, type Insight, type InsightLevel } from './analysis';
 import { BudgetRuleCard, HealthCard, RecurringCard } from './DeepCards';
+import { CategoryFilterBar } from './CategoryFilterBar';
 import { MonthDetail } from './MonthDetail';
+import { YearToDate } from './YearToDate';
+import { categoryKeyOf, filteredExpense, type CategoryFilter } from './ytd';
 import { formatBRL, monthTitle, shortMonth } from './format';
 import { Tile } from './ui';
 
@@ -19,7 +22,7 @@ type State =
   | { status: 'error'; message: string }
   | { status: 'ready'; analysis: Analysis; summaries: MonthlySummary[]; entries: Entry[] };
 
-type Tab = 'period' | 'month';
+type Tab = 'period' | 'month' | 'ytd';
 
 const PERIODS = [6, 12] as const;
 
@@ -47,6 +50,7 @@ function Insights() {
   const [period, setPeriod] = useState<(typeof PERIODS)[number]>(6);
   const [state, setState] = useState<State>({ status: 'loading' });
   const [tab, setTab] = useState<Tab>('period');
+  const [filter, setFilter] = useState<CategoryFilter>(null);
   const householdId = active?.id;
   const cardIds = data.accounts.filter((a) => a.kind === 'credit_card').map((a) => a.id).join(',');
 
@@ -82,6 +86,9 @@ function Insights() {
         <Button variant={tab === 'month' ? 'primary' : 'secondary'} aria-pressed={tab === 'month'} onClick={() => setTab('month')}>
           Mês em detalhe
         </Button>
+        <Button variant={tab === 'ytd' ? 'primary' : 'secondary'} aria-pressed={tab === 'ytd'} onClick={() => setTab('ytd')}>
+          Ano até agora
+        </Button>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         {tab === 'period' ? (
@@ -97,7 +104,9 @@ function Insights() {
         )}
         <MonthPicker month={reference} onChange={setReference} />
       </div>
-      {tab === 'month' && householdId && <MonthDetail householdId={householdId} month={reference} today={today} timezone={active?.timezone} />}
+      <CategoryFilterBar value={filter} onChange={setFilter} />
+      {tab === 'month' && householdId && <MonthDetail householdId={householdId} month={reference} today={today} timezone={active?.timezone} filter={filter} />}
+      {tab === 'ytd' && householdId && <YearToDate householdId={householdId} month={reference} today={today} filter={filter} />}
       {tab === 'period' && state.status === 'loading' && <LoadingState label="Calculando análises…" />}
       {tab === 'period' && state.status === 'error' && (
         <ErrorState
@@ -109,12 +118,12 @@ function Insights() {
           }
         />
       )}
-      {tab === 'period' && state.status === 'ready' && <Report analysis={state.analysis} summaries={state.summaries} entries={state.entries} />}
+      {tab === 'period' && state.status === 'ready' && <Report analysis={state.analysis} summaries={state.summaries} entries={state.entries} filter={filter} />}
     </div>
   );
 }
 
-function Report({ analysis: a, summaries, entries }: { analysis: Analysis; summaries: MonthlySummary[]; entries: Entry[] }) {
+function Report({ analysis: a, summaries, entries, filter }: { analysis: Analysis; summaries: MonthlySummary[]; entries: Entry[]; filter: CategoryFilter }) {
   const ref = a.series.at(-1)!;
   const last = summaries.at(-1)!;
   const complete = new Set(a.completeMonths.map((p) => p.month));
@@ -142,10 +151,10 @@ function Report({ analysis: a, summaries, entries }: { analysis: Analysis; summa
         </Tile>
       </div>
 
-      <Evolution analysis={a} />
+      <Evolution analysis={a} filteredExpenses={filter ? summaries.map((x) => filteredExpense(x, filter)) : null} />
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Categories analysis={a} partial={ref.partial} />
+        <Categories analysis={a} partial={ref.partial} filter={filter} />
         <Future analysis={a} />
       </div>
 
@@ -192,7 +201,9 @@ function Diagnosis({ insights }: { insights: Insight[] }) {
   );
 }
 
-function Evolution({ analysis: a }: { analysis: Analysis }) {
+function Evolution({ analysis, filteredExpenses }: { analysis: Analysis; filteredExpenses: number[] | null }) {
+  // Com filtro, só a coluna de despesa muda; resultado e poupança seguem com todos os lançamentos.
+  const a = filteredExpenses ? { ...analysis, series: analysis.series.map((p, i) => ({ ...p, expense_cents: filteredExpenses[i] ?? 0 })) } : analysis;
   const max = Math.max(...a.series.flatMap((p) => [p.income_cents, p.expense_cents]), 1);
   return (
     <section aria-labelledby="titulo-evolucao" className="rounded-xl bg-white p-4 shadow-sm">
@@ -204,7 +215,7 @@ function Evolution({ analysis: a }: { analysis: Analysis }) {
           <span aria-hidden="true" className="inline-block size-3 rounded-sm bg-chart-income" /> Receitas
         </span>
         <span className="flex items-center gap-1">
-          <span aria-hidden="true" className="inline-block size-3 rounded-sm bg-chart-expense" /> Despesas
+          <span aria-hidden="true" className="inline-block size-3 rounded-sm bg-chart-expense" /> {filteredExpenses ? 'Despesas filtradas' : 'Despesas'}
         </span>
       </p>
       <div aria-hidden="true" className="flex h-40 items-end gap-2 overflow-x-auto border-b border-ink/10">
@@ -230,7 +241,7 @@ function Evolution({ analysis: a }: { analysis: Analysis }) {
             <tr className="text-left text-ink/70">
               <th scope="col" className="py-1 pr-2 font-medium">Mês</th>
               <th scope="col" className="py-1 pr-2 text-right font-medium">Receitas</th>
-              <th scope="col" className="py-1 pr-2 text-right font-medium">Despesas</th>
+              <th scope="col" className="py-1 pr-2 text-right font-medium">{filteredExpenses ? 'Despesas filtradas' : 'Despesas'}</th>
               <th scope="col" className="py-1 pr-2 text-right font-medium">Resultado</th>
               <th scope="col" className="py-1 text-right font-medium">Poupança</th>
             </tr>
@@ -262,8 +273,10 @@ function Evolution({ analysis: a }: { analysis: Analysis }) {
   );
 }
 
-function Categories({ analysis: a, partial }: { analysis: Analysis; partial: boolean }) {
-  const items = a.categories.filter((c) => c.current_cents > 0 || c.baseline_cents > 0).slice(0, 8);
+function Categories({ analysis: a, partial, filter }: { analysis: Analysis; partial: boolean; filter: CategoryFilter }) {
+  const items = a.categories
+    .filter((c) => (c.current_cents > 0 || c.baseline_cents > 0) && (!filter || filter.has(categoryKeyOf(c.key === 'sem' ? null : c.key))))
+    .slice(0, 8);
   const max = Math.max(...items.flatMap((c) => [c.current_cents, c.baseline_cents]), 1);
   return (
     <section aria-labelledby="titulo-categorias" className="rounded-xl bg-white p-4 shadow-sm">

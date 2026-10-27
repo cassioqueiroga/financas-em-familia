@@ -54,7 +54,7 @@ os testes correspondentes falharem.
   com histórico, transferências (inclusive entre espaços), idempotência e
   concorrência otimista, parcelamento em centavos exatos, fechamento e
   vencimento de fatura, pagamento parcial e total, estorno, resumo mensal,
-  importação com deduplicação. Total: 119 testes de banco.
+  importação com deduplicação. Grupo 50-30-20 por categoria (D31). Total: 121 testes de banco.
 - **Interface** (`pages.test.tsx`): painel vazio e com dados, validações de
   conta, cartão, valor e parcelas, despesa pendente, receita, transferência,
   cancelamento com confirmação, mensagem segura em erro do servidor, compra
@@ -76,7 +76,7 @@ fez 1 falhar.
 - Fluxo real de autenticação e chamadas ao Supabase hospedado: não há
   projeto Supabase configurado (ver `docs/pendencias.md`). O backend local
   (D17) cobre o mesmo banco e as mesmas regras, mas não o GoTrue/PostgREST reais.
-  `npm run e2e:supabase` passou (40/40) e `npm run e2e:navegador` (22/22; 28/28 com as Análises e o mês em detalhe, só no backend local)
+  `npm run e2e:supabase` passou (40/40) e `npm run e2e:navegador` (22/22; 31/31 com as Análises, o mês em detalhe, o ano até agora, o filtro por categoria e o grupo por categoria, só no backend local)
   **somente contra o backend local**; nenhum dos dois rodou contra um
   projeto Supabase.
 - Testes ponta a ponta em navegador no CI: não há CI configurado.

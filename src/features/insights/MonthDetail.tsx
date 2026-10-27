@@ -5,22 +5,25 @@ import { Button } from '@/components/ui/Button';
 import { ErrorState, LoadingState } from '@/components/ui/StatusViews';
 import { useFinance } from '@/features/finance/FinanceContext';
 import type { Entry, MonthlySummary } from '@/features/finance/types';
-import { addMonths, formatBusinessDate, toBusinessDate } from '@/lib/dates';
+import { addMonths, formatBusinessDate, monthBounds, toBusinessDate } from '@/lib/dates';
 import { toUserMessage } from '@/lib/errors';
 import { savingsRate } from './analysis';
 import {
   GROUP_LABEL,
   byWeekday,
   categoryName,
+  categoryGroups,
   categoryRows,
   cumulativeByDay,
   detailRange,
+  monthExpenses,
   monthIncomes,
   projectMonth,
   splitByGroup,
   topExpenses,
 } from './deep';
 import { formatBRL, monthTitle } from './format';
+import { filterEntries, filterSummary, type CategoryFilter } from './ytd';
 import { Card, CumulativeChart, Delta, STRIPES, StackedBar, Tile } from './ui';
 
 interface Loaded {
@@ -34,7 +37,19 @@ type State = { status: 'loading' } | { status: 'error'; message: string } | { st
 
 const percent = (f: number | null) => (f === null ? '—' : `${Math.round(f * 100)}%`);
 
-export function MonthDetail({ householdId, month, today, timezone }: { householdId: string; month: string; today: string; timezone: string | undefined }) {
+export function MonthDetail({
+  householdId,
+  month,
+  today,
+  timezone,
+  filter,
+}: {
+  householdId: string;
+  month: string;
+  today: string;
+  timezone: string | undefined;
+  filter: CategoryFilter;
+}) {
   const { finance } = useServices();
   const [state, setState] = useState<State>({ status: 'loading' });
 
@@ -74,10 +89,14 @@ export function MonthDetail({ householdId, month, today, timezone }: { household
       />
     );
   const todayDay = month === today ? Number(toBusinessDate(new Date(), timezone).slice(8, 10)) : null;
-  return <Detail data={state.data} month={month} todayDay={todayDay} />;
+  const d = state.data;
+  const view = filter
+    ? { current: filterSummary(d.current, filter), previous: filterSummary(d.previous, filter), lastYear: filterSummary(d.lastYear, filter), entries: filterEntries(d.entries, filter) }
+    : d;
+  return <Detail data={view} month={month} todayDay={todayDay} filtered={filter !== null} />;
 }
 
-function Detail({ data, month, todayDay }: { data: Loaded; month: string; todayDay: number | null }) {
+function Detail({ data, month, todayDay, filtered }: { data: Loaded; month: string; todayDay: number | null; filtered: boolean }) {
   const { data: space, memberName } = useFinance();
   const { current: c, previous: p, lastYear: y, entries } = data;
   const prevMonth = addMonths(month, -1);
@@ -86,11 +105,27 @@ function Detail({ data, month, todayDay }: { data: Loaded; month: string; todayD
   const curve = cumulativeByDay(entries, month);
   const prevCurve = cumulativeByDay(entries, prevMonth);
   const shownCurve = todayDay ? curve.slice(0, todayDay) : curve;
-  const projection = todayDay ? projectMonth(curve, todayDay, c.pending_expense_cents) : null;
+  const { from: mFrom, to: mTo } = monthBounds(month);
+  const pendingExpense = filtered
+    ? entries.filter((e) => e.status === 'pending' && e.kind === 'expense' && e.occurred_on >= mFrom && e.occurred_on <= mTo).reduce((s, e) => s + e.amount_cents, 0)
+    : c.pending_expense_cents;
+  const projection = todayDay ? projectMonth(curve, todayDay, pendingExpense) : null;
+  const byMember = filtered
+    ? Object.entries(
+        monthExpenses(entries, month).reduce<Record<string, number>>((acc, e) => {
+          const k = e.attributed_to ?? '';
+          acc[k] = (acc[k] ?? 0) + e.amount_cents;
+          return acc;
+        }, {}),
+      )
+        .map(([user_id, total_cents]) => ({ user_id: user_id || null, total_cents }))
+        .sort((a, b) => b.total_cents - a.total_cents)
+    : c.expenses_by_member;
   const prevAtSameDay = todayDay ? (prevCurve[Math.min(todayDay, prevCurve.length) - 1] ?? 0) : null;
 
-  const split = splitByGroup(c);
-  const rows = categoryRows(c, p);
+  const groups = categoryGroups(space.categories);
+  const split = splitByGroup(c, groups);
+  const rows = categoryRows(c, p, groups);
   const top = topExpenses(entries, month);
   const weekdays = byWeekday(entries, month);
   const weekMax = Math.max(...weekdays.map((w) => w.total_cents), 1);
@@ -119,7 +154,7 @@ function Detail({ data, month, todayDay }: { data: Loaded; month: string; todayD
           <Amount value={c.income_cents} />
         </Tile>
         <Tile
-          label="Despesas"
+          label={filtered ? 'Despesas filtradas' : 'Despesas'}
           hint={
             <>
               vs mês anterior: <Delta current={c.expense_cents} previous={p.expense_cents} /> · vs um ano antes:{' '}
@@ -293,11 +328,11 @@ function Detail({ data, month, todayDay }: { data: Loaded; month: string; todayD
           </Card>
 
           <Card id="titulo-pessoas-mes" title="Despesas por pessoa">
-            {c.expenses_by_member.length === 0 ? (
+            {byMember.length === 0 ? (
               <p className="text-sm text-ink/70">Sem despesas neste mês.</p>
             ) : (
               <ul className="divide-y divide-ink/10 text-sm">
-                {c.expenses_by_member.map((m) => (
+                {byMember.map((m) => (
                   <li key={m.user_id ?? 'sem'} className="flex justify-between gap-2 py-1.5">
                     <span>{memberName(m.user_id)}</span>
                     <span>
